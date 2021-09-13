@@ -8,11 +8,12 @@ environment:
   flutter: '>=1.22.0'
 
 dependencies:
+  align_positioned: ^2.0.4
   cupertino_icons: ^1.0.3
   flutter:
     sdk: flutter
   provider: ^5.0.0
-  video_player: ^2.1.5
+  video_player: ^2.2.0
   wakelock: ^0.5.2
 
 dev_dependencies:

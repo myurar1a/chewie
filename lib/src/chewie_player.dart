@@ -246,6 +246,8 @@ class ChewieController extends ChangeNotifier {
     this.allowFullScreen = true,
     this.allowMuting = true,
     this.allowPlaybackSpeedChanging = true,
+    this.hotspots,
+    this.quality = const ['Default'],
     this.playbackSpeeds = const [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
     this.systemOverlaysOnEnterFullScreen,
     this.deviceOrientationsOnEnterFullScreen,
@@ -284,6 +286,8 @@ class ChewieController extends ChangeNotifier {
     bool? allowFullScreen,
     bool? allowMuting,
     bool? allowPlaybackSpeedChanging,
+    List<double>? hotspots,
+    List<String>? quality,
     List<double>? playbackSpeeds,
     List<SystemUiOverlay>? systemOverlaysOnEnterFullScreen,
     List<DeviceOrientation>? deviceOrientationsOnEnterFullScreen,
@@ -325,6 +329,8 @@ class ChewieController extends ChangeNotifier {
       allowMuting: allowMuting ?? this.allowMuting,
       allowPlaybackSpeedChanging:
           allowPlaybackSpeedChanging ?? this.allowPlaybackSpeedChanging,
+      hotspots: hotspots ?? this.hotspots,
+      quality: quality ?? this.quality,
       playbackSpeeds: playbackSpeeds ?? this.playbackSpeeds,
       systemOverlaysOnEnterFullScreen: systemOverlaysOnEnterFullScreen ??
           this.systemOverlaysOnEnterFullScreen,
@@ -438,6 +444,12 @@ class ChewieController extends ChangeNotifier {
 
   /// Defines if the playback speed control should be shown
   final bool allowPlaybackSpeedChanging;
+
+  /// Defines if the video have hotspot
+  final List<double>? hotspots;
+
+  /// Defines the set of allowed quality user can change
+  final List<String> quality;
 
   /// Defines the set of allowed playback speeds user can change
   final List<double> playbackSpeeds;

@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math';
 
+import 'package:align_positioned/align_positioned.dart';
 import 'package:chewie/src/center_play_button.dart';
 import 'package:chewie/src/chewie_player.dart';
 import 'package:chewie/src/chewie_progress_colors.dart';
@@ -23,6 +25,15 @@ class MaterialControls extends StatefulWidget {
     return _MaterialControlsState();
   }
 }
+
+/*
+ 【全体の変更について】
+・レイアウトデザインを現行のものから一つ前のデザインに変更 (Pornhubに実装されているものとほぼ同一となる)
+・人気ポイント (通称：抜きどころグラフ) の表示を実装
+  ・プログレスバーにあたる部分の Row に 現在時間 / 動画時間 / 拡大ボタン を配置
+  ・人気ポイントの高さが 30 となるように、Row の高さを 13.25 拡大する
+・ダブルタップでスキップを実装
+*/
 
 class _MaterialControlsState extends State<MaterialControls>
     with SingleTickerProviderStateMixin {
@@ -263,9 +274,9 @@ class _MaterialControlsState extends State<MaterialControls>
       duration: const Duration(milliseconds: 300),
       child: Container(
         height: barHeight + (chewieController.isFullScreen ? 10.0 : 0),
-        padding: EdgeInsets.only(
-          left: 20,
-          bottom: !chewieController.isFullScreen ? 10.0 : 0,
+        padding: const EdgeInsets.only(
+          left: 8.0,
+          //bottom: !chewieController.isFullScreen ? 10.0 : 0,
         ),
         child: SafeArea(
           bottom: chewieController.isFullScreen,
@@ -279,9 +290,6 @@ class _MaterialControlsState extends State<MaterialControls>
                   children: <Widget>[
                     if (chewieController.isLive)
                       const Expanded(child: Text('LIVE'))
-                    else
-                      _buildPosition(iconColor),
-                    if (chewieController.allowFullScreen) _buildExpandButton(),
                   ],
                 ),
               ),
@@ -291,10 +299,14 @@ class _MaterialControlsState extends State<MaterialControls>
               if (!chewieController.isLive)
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.only(right: 20),
+                    padding: const EdgeInsets.only(right: 6.0),
                     child: Row(
                       children: [
+                        _buildPosition(iconColor),
                         _buildProgressBar(),
+                        _buildDuration(iconColor),
+                        if (chewieController.allowFullScreen)
+                          _buildExpandButton(),
                       ],
                     ),
                   ),
@@ -314,11 +326,8 @@ class _MaterialControlsState extends State<MaterialControls>
         duration: const Duration(milliseconds: 300),
         child: Container(
           height: barHeight + (chewieController.isFullScreen ? 15.0 : 0),
-          margin: const EdgeInsets.only(right: 12.0),
-          padding: const EdgeInsets.only(
-            left: 8.0,
-            right: 8.0,
-          ),
+          //margin: const EdgeInsets.only(right: 12.0),
+          padding: const EdgeInsets.only(left: 6.0),
           child: Center(
             child: Icon(
               chewieController.isFullScreen
@@ -388,25 +397,35 @@ class _MaterialControlsState extends State<MaterialControls>
 
   Widget _buildPosition(Color? iconColor) {
     final position = _latestValue.position;
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: RichText(
+        text: TextSpan(
+          text: formatDuration(position),
+          style: const TextStyle(
+            fontSize: 12.0,
+            color: Colors.white,
+            fontWeight: FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDuration(Color? iconColor) {
     final duration = _latestValue.duration;
 
-    return RichText(
-      text: TextSpan(
-        text: '${formatDuration(position)} ',
-        children: <InlineSpan>[
-          TextSpan(
-            text: '/ ${formatDuration(duration)}',
-            style: TextStyle(
-              fontSize: 14.0,
-              color: Colors.white.withOpacity(.75),
-              fontWeight: FontWeight.normal,
-            ),
-          )
-        ],
-        style: const TextStyle(
-          fontSize: 14.0,
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0),
+      child: RichText(
+        text: TextSpan(
+          text: formatDuration(duration),
+          style: const TextStyle(
+            fontSize: 12.0,
+            color: Colors.white,
+            fontWeight: FontWeight.normal,
+          ),
         ),
       ),
     );
@@ -528,30 +547,72 @@ class _MaterialControlsState extends State<MaterialControls>
 
   Widget _buildProgressBar() {
     return Expanded(
-      child: MaterialVideoProgressBar(
-        controller,
-        onDragStart: () {
-          setState(() {
-            _dragging = true;
-          });
-
-          _hideTimer?.cancel();
-        },
-        onDragEnd: () {
-          setState(() {
-            _dragging = false;
-          });
-
-          _startHideTimer();
-        },
-        colors: chewieController.materialProgressColors ??
-            ChewieProgressColors(
-              playedColor: Theme.of(context).accentColor,
-              handleColor: Theme.of(context).accentColor,
-              bufferedColor: Theme.of(context).backgroundColor.withOpacity(0.5),
-              backgroundColor: Theme.of(context).disabledColor.withOpacity(.5),
+      child: Stack(clipBehavior: Clip.none, children: [
+        if (chewieController.hotspots != null)
+          AlignPositioned(
+            alignment: const Alignment(0.0, -0.5),
+            childWidthRatio: 1.0,
+            childHeight: 30,
+            touch: Touch.outside,
+            child: FittedBox(
+              fit: BoxFit.fill,
+              child: ClipPath(
+                clipper: GraphClipper(chewieController.hotspots!),
+                child: Container(
+                  width: 1000,
+                  height: 100,
+                  color: const Color.fromRGBO(33, 29, 27, 0.83),
+                ),
+              ),
             ),
-      ),
+          ),
+        MaterialVideoProgressBar(
+          controller,
+          onDragStart: () {
+            setState(() {
+              _dragging = true;
+            });
+
+            _hideTimer?.cancel();
+          },
+          onDragEnd: () {
+            setState(() {
+              _dragging = false;
+            });
+
+            _startHideTimer();
+          },
+          colors: chewieController.materialProgressColors ??
+              ChewieProgressColors(
+                playedColor: Theme.of(context).accentColor,
+                handleColor: Theme.of(context).accentColor,
+                bufferedColor:
+                    Theme.of(context).backgroundColor.withOpacity(0.5),
+                backgroundColor:
+                    Theme.of(context).disabledColor.withOpacity(.5),
+              ),
+        ),
+      ]),
     );
   }
+}
+
+class GraphClipper extends CustomClipper<Path> {
+  GraphClipper(this.hotspots);
+  final List<double> hotspots;
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    for (var i = 0; i < hotspots.length - 1; i++) {
+      final dxpoint = 1000 / (hotspots.length - 2) * i;
+      final dypoint = 100 - (hotspots[i + 1] / (hotspots.reduce(max) / 100));
+      path.lineTo(dxpoint, dypoint.ceil().toDouble());
+    }
+    path.lineTo(1000 / hotspots.length * (hotspots.length + 1), 100);
+    path.lineTo(0, 100);
+    return path;
+  }
+
+  @override
+  bool shouldReclip(GraphClipper oldClipper) => false;
 }
