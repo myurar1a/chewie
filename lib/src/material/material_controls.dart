@@ -282,7 +282,9 @@ class _MaterialControlsState extends State<MaterialControls>
           bottom: chewieController.isFullScreen,
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: (chewieController.isFullScreen
+                ? MainAxisAlignment.center
+                : MainAxisAlignment.end),
             children: [
               Flexible(
                 child: Row(
