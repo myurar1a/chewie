@@ -282,9 +282,9 @@ class _MaterialControlsState extends State<MaterialControls>
           bottom: chewieController.isFullScreen,
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: (chewieController.isFullScreen
+            mainAxisAlignment: chewieController.isFullScreen
                 ? MainAxisAlignment.center
-                : MainAxisAlignment.end),
+                : MainAxisAlignment.end,
             children: [
               Flexible(
                 child: Row(
@@ -301,7 +301,9 @@ class _MaterialControlsState extends State<MaterialControls>
               if (!chewieController.isLive)
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.only(right: 6.0),
+                    padding: chewieController.isFullScreen
+                        ? const EdgeInsets.only(right: 6.0)
+                        : const EdgeInsets.only(right: 6.0, bottom: 6.0),
                     child: Row(
                       children: [
                         _buildPosition(iconColor),
